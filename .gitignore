@@ -1,0 +1,49 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# next
+.next/
+out/
+build/
+dist/
+
+# env
+.env
+.env.local
+.env*.local
+
+# testing
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# database
+*.db
+*.sqlite
+
+# uploads & generated artifacts — NEVER commit real financial data
+uploads/
+storage/
+tmp/
+*.pdf
+!docs/**/*.pdf
+
+# logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# misc
+.vercel
+*.tsbuildinfo
+next-env.d.ts

@@ -1,0 +1,55 @@
+name: Bank statement format
+description: Add support for a bank's CSV export
+labels: [bank-format, help wanted]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Format profiles are one of the most valuable contributions to this project.
+
+        ⚠️ **Anonymise completely.** Fake counterparties, shifted dates, scaled amounts. Never post real transactions.
+  - type: input
+    id: bank
+    attributes:
+      label: Bank and country
+      placeholder: Republic Bank, Trinidad & Tobago
+    validations:
+      required: true
+  - type: textarea
+    id: headers
+    attributes:
+      label: Header row exactly as exported
+      render: csv
+    validations:
+      required: true
+  - type: textarea
+    id: rows
+    attributes:
+      label: 3–5 fully anonymised sample rows
+      render: csv
+    validations:
+      required: true
+  - type: input
+    id: dateformat
+    attributes:
+      label: Date format
+      placeholder: DD/MM/YYYY
+  - type: dropdown
+    id: amountstyle
+    attributes:
+      label: Amount representation
+      options:
+        - Separate debit and credit columns
+        - Single signed amount column
+        - Amount plus a DR/CR indicator
+        - Other
+  - type: dropdown
+    id: balance
+    attributes:
+      label: Does the export include a running balance?
+      options: ['Yes', 'No']
+  - type: textarea
+    id: quirks
+    attributes:
+      label: Quirks
+      placeholder: Footer rows, blank lines above the header, currency symbols in amounts...

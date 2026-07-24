@@ -1,0 +1,8 @@
+# Default owner
+*                           @hasbunallah01
+
+# Anything affecting analytical correctness needs owner review
+/lib/analysis/              @hasbunallah01
+/agents/                    @hasbunallah01
+/prompts/                   @hasbunallah01
+/docs/SCORING_METHODOLOGY.md @hasbunallah01
