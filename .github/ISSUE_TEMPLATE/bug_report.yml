@@ -1,0 +1,52 @@
+name: Bug report
+description: Something behaves incorrectly
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠️ **Never attach a real bank statement.** Anonymise any sample data completely.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Include the actual behaviour and the expected behaviour.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Upload a statement with ...
+        2. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Upload / CSV parsing
+        - Data Validation Agent
+        - Transaction Analysis Agent
+        - Financial Health Agent / scoring
+        - Insight Generation Agent
+        - Report / PDF
+        - UI
+        - API
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Anonymised sample (optional)
+      description: A few synthetic rows that reproduce the issue.
+      render: csv
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: Node 20.11, Chrome 126, macOS 15

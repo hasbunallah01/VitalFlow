@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required documents exist
+        run: |
+          set -e
+          for f in README.md LICENSE CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md \
+                   docs/ARCHITECTURE.md docs/AGENTS.md docs/API_PLAN.md docs/ROADMAP.md \
+                   docs/DATA_MODEL.md docs/SCORING_METHODOLOGY.md docs/SECURITY_PRIVACY.md; do
+            test -f "$f" || { echo "::error::Missing required document: $f"; exit 1; }
+          done
+          echo "All required documents present."
+
+      - name: Guard against committed secrets
+        run: |
+          if git ls-files | grep -E '^\.env($|\.local)' ; then
+            echo "::error::An environment file is tracked. Remove it and rotate the credentials."
+            exit 1
+          fi
+          echo "No environment files tracked."
+
+  app:
+    name: Lint, typecheck, test
+    runs-on: ubuntu-latest
+    # Skipped until the application is implemented (no lockfile yet).
+    if: ${{ hashFiles('package-lock.json') != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build

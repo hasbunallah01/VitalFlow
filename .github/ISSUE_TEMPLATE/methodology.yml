@@ -1,0 +1,40 @@
+name: Methodology review
+description: Challenge or improve the financial methodology
+labels: [methodology, discussion]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Domain critique from accountants, lenders, and MSME advisors is more valuable to this project than most code.
+  - type: dropdown
+    id: pillar
+    attributes:
+      label: Which part of the score?
+      options:
+        - Cash Flow Stability
+        - Revenue Quality & Predictability
+        - Expense Discipline
+        - Liquidity & Runway
+        - Risk Profile
+        - Funding readiness tiers
+        - Weighting between pillars
+        - Confidence handling
+    validations:
+      required: true
+  - type: textarea
+    id: concern
+    attributes:
+      label: What is wrong, and why?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed threshold, formula, or weighting
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: Supporting reference
+      description: Standard practice, published research, or lending experience.

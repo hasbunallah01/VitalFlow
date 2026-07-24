@@ -1,0 +1,388 @@
+// VitalFlow — draft schema
+// Design reference: docs/DATA_MODEL.md
+// STATUS: draft. Not migrated. Expect changes before the first migration.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Organisation & access
+// ---------------------------------------------------------------------------
+
+model Organization {
+  id              String   @id @default(cuid())
+  name            String
+  country         String?  // ISO 3166-1 alpha-2
+  defaultCurrency String   // ISO 4217
+  sector          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  statements Statement[]
+  analyses   Analysis[]
+  auditLogs  AuditLog[]
+}
+
+// ---------------------------------------------------------------------------
+// Statements & transactions
+// ---------------------------------------------------------------------------
+
+model Statement {
+  id                 String          @id @default(cuid())
+  organizationId     String
+  filename           String
+  fileRef            String // object storage key — never a public path
+  sizeBytes          Int
+  checksum           String
+  status             StatementStatus @default(uploaded)
+  currency           String?
+  periodStart        DateTime?
+  periodEnd          DateTime?
+  columnMapping      Json?
+  hasBalanceColumn   Boolean         @default(false)
+  qualityReport      Json?
+  retentionExpiresAt DateTime?
+  supersedesId       String?
+  createdAt          DateTime        @default(now())
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  analyses     Analysis[]
+
+  @@index([organizationId, createdAt])
+  @@index([checksum])
+}
+
+model Transaction {
+  id                    String          @id @default(cuid())
+  statementId           String
+  organizationId        String // denormalised for query scoping
+  date                  DateTime        @db.Date
+  description           String
+  normalizedDescription String
+  amountMinor           BigInt // signed integer minor units; positive = inflow
+  currency              String
+  balanceMinor          BigInt?
+  direction             Direction
+  category              String?
+  categorySource        CategorySource?
+  counterpartyId        String?
+  isTransfer            Boolean         @default(false)
+  isRecurring           Boolean         @default(false)
+  recurringSeriesId     String?
+  rowNumber             Int
+
+  statement    Statement       @relation(fields: [statementId], references: [id], onDelete: Cascade)
+  counterparty Counterparty?   @relation(fields: [counterpartyId], references: [id])
+  series       RecurringSeries? @relation(fields: [recurringSeriesId], references: [id])
+
+  @@index([organizationId, date])
+  @@index([statementId, date])
+  @@index([counterpartyId])
+  @@index([recurringSeriesId])
+}
+
+model Counterparty {
+  id                String           @id @default(cuid())
+  organizationId    String
+  displayName       String
+  normalizedKey     String
+  type              CounterpartyType @default(unknown)
+  totalInflowMinor  BigInt           @default(0)
+  totalOutflowMinor BigInt           @default(0)
+  transactionCount  Int              @default(0)
+  firstSeen         DateTime?        @db.Date
+  lastSeen          DateTime?        @db.Date
+
+  transactions Transaction[]
+
+  @@unique([organizationId, normalizedKey])
+}
+
+model RecurringSeries {
+  id                String   @id @default(cuid())
+  analysisId        String
+  label             String
+  direction         Direction
+  cadence           Cadence
+  medianAmountMinor BigInt
+  amountVariance    Float
+  confidence        Float
+  isActive          Boolean  @default(true)
+  isFixedObligation Boolean  @default(false)
+
+  analysis     Analysis      @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([analysisId])
+}
+
+// ---------------------------------------------------------------------------
+// Analysis
+// ---------------------------------------------------------------------------
+
+model Analysis {
+  id                  String         @id @default(cuid())
+  organizationId      String
+  statementId         String
+  status              AnalysisStatus @default(queued)
+  stage               String?
+  progressPercent     Int            @default(0)
+  score               Int?
+  band                HealthBand?
+  pillars             Json?
+  confidence          Float?
+  fundingTier         FundingTier?
+  scoringVersion      String         @default("scoring@0.1.0")
+  degraded            Boolean        @default(false)
+  failureCode         String?
+  failureMessage      String?
+  totalTokens         Int            @default(0)
+  estimatedCostMicros BigInt         @default(0)
+  startedAt           DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime       @default(now())
+
+  organization    Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  statement       Statement         @relation(fields: [statementId], references: [id], onDelete: Cascade)
+  agentRuns       AgentRun[]
+  metrics         Metric[]
+  insights        Insight[]
+  recommendations Recommendation[]
+  riskFlags       RiskFlag[]
+  recurringSeries RecurringSeries[]
+  report          Report?
+
+  @@index([organizationId, createdAt])
+}
+
+/// Append-only audit ledger. Never updated, never deleted while its analysis exists.
+model AgentRun {
+  id           String    @id @default(cuid())
+  analysisId   String
+  agent        String
+  agentVersion String
+  promptId     String?
+  model        String?
+  inputHash    String
+  output       Json?
+  status       RunStatus
+  warnings     Json      @default("[]")
+  tokensIn     Int?
+  tokensOut    Int?
+  durationMs   Int
+  startedAt    DateTime
+  finishedAt   DateTime?
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId, startedAt])
+}
+
+model Metric {
+  id         String  @id @default(cuid())
+  analysisId String
+  key        String
+  value      Float
+  unit       String
+  currency   String?
+  pillar     String?
+  confidence Float   @default(1)
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@unique([analysisId, key])
+}
+
+model Insight {
+  id                    String   @id @default(cuid())
+  analysisId            String
+  title                 String
+  explanation           String
+  severity              Severity
+  sourceMetrics         String[] // REQUIRED, non-empty — provenance is an invariant
+  evidenceTransactionIds String[]
+  displayOrder          Int      @default(0)
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+}
+
+model Recommendation {
+  id                 String   @id @default(cuid())
+  analysisId         String
+  action             String
+  rationale          String
+  priority           Int
+  effort             Effort
+  pillar             String?
+  estimatedPointGain Float?
+  timeframe          String
+  displayOrder       Int      @default(0)
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+}
+
+model RiskFlag {
+  id                     String   @id @default(cuid())
+  analysisId             String
+  code                   String
+  severity               Severity
+  detail                 String
+  pointsDeducted         Float    @default(0)
+  evidenceTransactionIds String[]
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+}
+
+// ---------------------------------------------------------------------------
+// Reports & sharing
+// ---------------------------------------------------------------------------
+
+model Report {
+  id                String   @id @default(cuid())
+  analysisId        String   @unique
+  pdfRef            String
+  model             Json
+  pages             Int
+  disclaimerVersion String
+  generatedAt       DateTime @default(now())
+
+  analysis   Analysis    @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  shareLinks ShareLink[]
+}
+
+model ShareLink {
+  id             String    @id @default(cuid())
+  reportId       String
+  token          String    @unique
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  accessCount    Int       @default(0)
+  lastAccessedAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+}
+
+/// Append-only. Every access to business financial data, visible to the owner.
+model AuditLog {
+  id             String    @id @default(cuid())
+  organizationId String
+  actorType      ActorType
+  actorId        String?
+  action         String
+  resourceType   String
+  resourceId     String?
+  ipHash         String?
+  occurredAt     DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, occurredAt])
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum StatementStatus {
+  uploaded
+  validating
+  validated
+  rejected
+}
+
+enum AnalysisStatus {
+  queued
+  validating
+  awaiting_input
+  analyzing
+  scoring
+  interpreting
+  reporting
+  completed
+  degraded
+  failed
+  validation_failed
+}
+
+enum Direction {
+  inflow
+  outflow
+}
+
+enum CategorySource {
+  rule
+  llm
+  user
+}
+
+enum CounterpartyType {
+  customer
+  supplier
+  employee
+  institution
+  internal
+  unknown
+}
+
+enum Cadence {
+  weekly
+  biweekly
+  monthly
+  quarterly
+  irregular
+}
+
+enum HealthBand {
+  Critical
+  Fragile
+  Watch
+  Healthy
+  Strong
+}
+
+enum FundingTier {
+  NotReady
+  Building
+  NearReady
+  Ready
+}
+
+enum RunStatus {
+  completed
+  failed
+  skipped
+  degraded
+}
+
+enum Severity {
+  info
+  watch
+  concern
+  critical
+}
+
+enum Effort {
+  low
+  medium
+  high
+}
+
+enum ActorType {
+  user
+  partner
+  system
+}
