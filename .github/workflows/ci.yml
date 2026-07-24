@@ -15,7 +15,7 @@ jobs:
     name: Documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check required documents exist
         run: |
@@ -41,7 +41,7 @@ jobs:
     # Skipped until the application is implemented (no lockfile yet).
     if: ${{ hashFiles('package-lock.json') != '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
