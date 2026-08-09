@@ -392,8 +392,129 @@ Responsibilities:
 - Retry with backoff on transient errors; never retry a deterministic failure
 - Emit progress events to the SSE stream
 - Aggregate cost and duration onto the `Analysis` record
+- **Schedule and dispatch the closed-loop agent (Funding Outreach)** when the pipeline completes
+- **Schedule the Watcher Agent** to run on a daily cron
+- **Schedule the Delta Agent** to run whenever a new analysis is uploaded for an existing business
 
-The orchestrator knows the *sequence*. It does not know what any agent does internally.
+The orchestrator knows the *sequence* and the *schedule*. It does not know what any agent does internally.
+
+---
+
+## 6. 🤝 Funding Outreach Agent (closed loop)
+
+> Added in Phase 1 of the build sprint. This is the only agent that is not strictly part of the linear pipeline — it is a **long-lived, event-triggered, semi-autonomous agent** that operates on the system of record over time.
+
+**Responsibility:** turn a completed `Analysis` into a lender-ready funding outreach, prepared and routed with human approval.
+
+**Directory:** `agents/funding-outreach/`
+
+### Why this is a separate agent
+
+The first four pipeline agents are **reactive**: they run on a CSV upload, do their job, and end. The Funding Outreach Agent is **proactive**: it wakes up after the pipeline completes, looks at the resulting `Analysis`, decides whether the business is now ready for any known funding program, drafts a plan, and waits for the business owner to approve the consequential action. This is the system's way of *continuing* to work after the analysis is done.
+
+### Triggers
+
+| Trigger | Behaviour |
+| --- | --- |
+| `analysis.completed` (webhook from orchestrator) | Run a planning pass on the new `Analysis` |
+| Weekly cron (`Vercel cron`, Mon 9am) | Re-evaluate the business's most recent `Analysis` against updated funding-program rules |
+| Manual button in the UI ("Run outreach check now") | Run on demand, for the demo or for ad-hoc re-evaluation |
+| `lender.accessed.share_link` (webhook) | Update `FundingOutreach.status` to `viewed`, notify the business |
+
+### Input
+
+```ts
+interface FundingOutreachInput {
+  analysisId: string;
+  organizationId: string;
+  trigger: 'analysis_completed' | 'weekly_cron' | 'manual';
+}
+```
+
+### Output
+
+```ts
+interface FundingOutreachPlan {
+  /// Programs the business currently qualifies for, with the rule that
+  /// made it eligible. Each entry matches a row in lib/funding/programs.ts.
+  eligiblePrograms: Array<{
+    programId: string;
+    programName: string;
+    jurisdiction: string;
+    eligible: boolean;
+    ruleMissed?: string; // present if eligible=false
+    estimatedAmount?: { amountMinor: bigint; currency: string };
+  }>;
+
+  /// LLM-generated outreach plan. Must cite sourceMetrics on every claim.
+  plan: {
+    headline: string;
+    summary: string;
+    recommendedProgramId: string;
+    nextSteps: string[];
+    evidenceRefs: string[]; // metric keys the plan depends on
+  };
+
+  /// Structured evidence pack — the same data the lender-facing API would serve.
+  /// Deterministic; the LLM never invents a number inside it.
+  evidencePack: {
+    business: { name: string; country: string; currency: string };
+    period: { start: ISODate; end: ISODate; months: number };
+    score: number;
+    band: HealthBand;
+    pillars: PillarScore[];
+    riskFlags: RiskFlag[];
+    fundingReadiness: {
+      tier: FundingTier;
+      blockers: Blocker[];
+      strengths: string[];
+    };
+    cashFlow: { totalInflow: Money; totalOutflow: Money; netFlow: Money; negativeMonths: number; volatility: number; runwayMonths: number };
+  };
+}
+```
+
+### Lifecycle of a `FundingOutreach` row
+
+```
+drafted  ─── human approves ──▶  approved  ─── link created ──▶  shared
+   │                                                                  │
+   │                                                                  ▼
+   │                                                              viewed
+   │                                                                  │
+   │                                                                  ▼
+   │                                                              completed
+   │
+   ├── human revokes ──▶ revoked
+   │
+   └── system error    ──▶ failed
+```
+
+### Human-in-the-loop gate
+
+The transition from `approved` to `shared` is the only consequential action this agent takes. It is gated by an explicit `POST /api/v1/funding-outreach/{id}/approve` from the business owner. The agent will never create a `ShareLink` on its own initiative.
+
+### What it does NOT do
+
+- ❌ Does not call a bank's API directly (no Caribbean open-banking rails exist yet)
+- ❌ Does not send email to the lender; it only creates a `ShareLink` the business owner can share
+- ❌ Does not modify the underlying `Analysis` or any earlier-pipeline data
+- ❌ Does not take the approval gate on its own; the business owner always approves
+
+### Failure modes
+
+| Condition | Behaviour |
+| --- | --- |
+| LLM unavailable for planning | Use a deterministic fallback: list all `eligiblePrograms` based on hardcoded rules only; skip the narrative `plan` field; mark `FundingOutreach.status = drafted` with a `degraded: true` flag |
+| No eligible programs | Mark `FundingOutreach.status = drafted` with `eligiblePrograms = []`; the business owner is told "no programs yet, here's what to fix" |
+| Evidence pack schema validation fails | Retry once with the validation error; if still fails, the FundingOutreach row is marked `failed` and the business owner is notified |
+
+### Companion agents (planned, MVP-scope)
+
+These are lighter-weight than Funding Outreach and live in the same directory family:
+
+- **🩺 Watcher Agent** (`agents/watcher/`). On a daily cron, compares the most recent `Analysis` to the previous one (or to the business's historical baseline) and writes a `WatchEvent` row if anything material changed. Emails the business via Resend. Trigger: cron only. Approval: none.
+- **🔄 Delta Agent** (`agents/delta/`). On every new `Analysis` for a business that already has a previous one, computes the score delta and per-pillar deltas, writes a `DeltaRecord` row, and emits a one-paragraph "what changed" summary. Trigger: orchestrator hook. Approval: none.
 
 ---
 

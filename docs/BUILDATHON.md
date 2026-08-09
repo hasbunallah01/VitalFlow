@@ -40,6 +40,8 @@ The buildathon asks for deployable agentic systems, not demos. Our agents are na
 
 Each agent writes an `AgentRun` record with its version, prompt ID, model, input hash, cost, and duration. Any output can be reproduced. That auditability is what makes the system usable as financial infrastructure rather than as an interesting demo.
 
+> **Note added during the 22-day build sprint (Aug 9, 2026):** the buildathon judging rubric allocates 50% weight to "Agentic AI Excellence" and explicitly looks for autonomous or semi-autonomous agents, multi-agent coordination, workflow orchestration, and human-in-the-loop design. A linear pipeline with an LLM at the end is a tool, not infrastructure. VitalFlow is being built with a **sixth agent — the Funding Outreach Agent — as a closed-loop, semi-autonomous agent** that wakes up when the pipeline completes, plans a funding outreach, and asks the business owner to approve the consequential action. Two companion agents (Watcher on a daily cron, Delta on each new analysis) provide observable autonomy without lifting the human-in-the-loop gate. The deterministic core, the four pipeline agents, and the append-only audit ledger are unchanged. The new agents extend the system with closed-loop behavior; they do not change the principle.
+
 Phase 5 is where "always-on" becomes literal: monitoring agents that watch connected data continuously and alert on drift rather than waiting for someone to upload a file.
 
 ## What "working" means for the sprint

@@ -1,6 +1,6 @@
-// VitalFlow — draft schema
+// VitalFlow — schema
 // Design reference: docs/DATA_MODEL.md
-// STATUS: draft. Not migrated. Expect changes before the first migration.
+// STATUS: pre-migration. Expect the first migration once the math foundation lands.
 
 generator client {
   provider = "prisma-client-js"
@@ -12,7 +12,65 @@ datasource db {
 }
 
 // ---------------------------------------------------------------------------
-// Organisation & access
+// Identity & access
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  memberships  Membership[]
+  sessions     Session[]
+  accounts     Account[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Membership {
+  id             String         @id @default(cuid())
+  userId         String
+  organizationId String
+  role           MembershipRole @default(owner)
+  createdAt      DateTime       @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+}
+
+// ---------------------------------------------------------------------------
+// Organisation
 // ---------------------------------------------------------------------------
 
 model Organization {
@@ -24,9 +82,10 @@ model Organization {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  statements Statement[]
-  analyses   Analysis[]
-  auditLogs  AuditLog[]
+  statements  Statement[]
+  analyses    Analysis[]
+  auditLogs   AuditLog[]
+  memberships Membership[]
 }
 
 // ---------------------------------------------------------------------------
@@ -158,6 +217,10 @@ model Analysis {
   riskFlags       RiskFlag[]
   recurringSeries RecurringSeries[]
   report          Report?
+  fundingOutreaches FundingOutreach[]
+  watchEvents     WatchEvent[]
+  deltaRecordsAsCurrent  DeltaRecord[] @relation("DeltaCurrent")
+  deltaRecordsAsPrevious DeltaRecord[] @relation("DeltaPrevious")
 
   @@index([organizationId, createdAt])
 }
@@ -261,6 +324,115 @@ model Report {
 
   analysis   Analysis    @relation(fields: [analysisId], references: [id], onDelete: Cascade)
   shareLinks ShareLink[]
+}
+
+// ---------------------------------------------------------------------------
+// Agentic loop entities (Phase 1)
+// These are the rows the Funding Outreach Agent, Watcher Agent, and Delta
+// Agent write to. The system of record grows over time as these accumulate.
+// ---------------------------------------------------------------------------
+
+/// A draft funding outreach plan, awaiting business-owner approval.
+/// Lifecycle: drafted → approved → shared → viewed → completed | revoked | failed
+model FundingOutreach {
+  id                  String                 @id @default(cuid())
+  analysisId          String
+  organizationId      String
+  status              FundingOutreachStatus  @default(drafted)
+
+  /// Hardcoded Caribbean funding programs the business may qualify for.
+  /// Each entry: { programId, programName, jurisdiction, eligible: bool, ruleMissed?: string }
+  eligiblePrograms    Json
+
+  /// LLM-generated outreach plan: { headline, summary, recommendedProgram, nextSteps[] }
+  plan                Json
+
+  /// Evidence pack draft (the same data the lender-facing API would serve).
+  evidencePack        Json
+
+  /// Approval gate: human-in-the-loop. Required before status can transition to 'shared'.
+  approvedAt          DateTime?
+  approvedByUserId    String?
+  shareLinkId         String?  @unique
+
+  /// The first time a lender accessed the shared link.
+  firstViewedAt       DateTime?
+  viewCount           Int                    @default(0)
+  lastViewedAt        DateTime?
+
+  /// LLM model + tokens used to draft the plan.
+  draftedByModel      String?
+  draftedAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@index([analysisId])
+}
+
+/// A material change detected by the Watcher Agent between analyses or
+/// against the business's historical baseline. Written automatically by the
+/// daily morning-check cron; the business gets a Resend email if anything
+/// significant is recorded.
+model WatchEvent {
+  id             String         @id @default(cuid())
+  organizationId String
+  analysisId     String?
+
+  /// What the watcher noticed. One of: score_drop, score_rise, risk_flag_new,
+  /// threshold_crossed, balance_anomaly, recurring_broken.
+  eventType       WatchEventType
+
+  /// What it means in plain language. Generated by the LLM, but the numbers
+  /// it cites must already exist on the Analysis row.
+  summary         String
+
+  /// The metric values that triggered the event. Keyed by metric.key.
+  /// E.g. { "score.composite": 63, "score.liquidity": 9 }
+  evidence       Json
+
+  /// Was the business owner notified?
+  notifiedAt      DateTime?
+  notificationChannel String? // "email" | "in_app" | null
+
+  createdAt       DateTime @default(now())
+
+  analysis Analysis? @relation(fields: [analysisId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([analysisId])
+}
+
+/// Written by the Delta Agent when a new analysis is uploaded for a business
+/// that already has a previous one. Captures the change so the "system of
+/// record over time" story is queryable.
+model DeltaRecord {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  currentAnalysisId     String
+  previousAnalysisId    String
+  scoreDelta            Int      // current.score - previous.score
+  bandChanged           Boolean
+  previousBand          HealthBand?
+  currentBand           HealthBand?
+
+  /// Per-pillar deltas. { "cash_flow_stability": 1, "liquidity_runway": -2, ... }
+  pillarDeltas          Json
+
+  /// LLM-generated one-paragraph "what changed" summary. Numeric claims
+  /// must match values in the evidence object.
+  summary               String
+
+  /// The numbers behind the summary. Same provenance rule as Insight.
+  evidence              Json
+
+  createdAt             DateTime @default(now())
+
+  currentAnalysis  Analysis @relation("DeltaCurrent", fields: [currentAnalysisId], references: [id], onDelete: Cascade)
+  previousAnalysis Analysis @relation("DeltaPrevious", fields: [previousAnalysisId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
 }
 
 model ShareLink {
@@ -385,4 +557,39 @@ enum ActorType {
   user
   partner
   system
+}
+
+// ---------------------------------------------------------------------------
+// Agentic-loop enums (Phase 1)
+// ---------------------------------------------------------------------------
+
+enum MembershipRole {
+  owner
+  admin
+  member
+  viewer
+}
+
+/// Lifecycle of a FundingOutreach row.
+/// drafted → approved (human gate) → shared (link created) → viewed (lender opened) → completed
+/// any state may transition to revoked or failed.
+enum FundingOutreachStatus {
+  drafted
+  approved
+  shared
+  viewed
+  completed
+  revoked
+  failed
+}
+
+/// What the Watcher Agent noticed. Each value triggers a different notification template.
+enum WatchEventType {
+  score_drop
+  score_rise
+  risk_flag_new
+  threshold_crossed
+  balance_anomaly
+  recurring_broken
+  funding_tier_change
 }

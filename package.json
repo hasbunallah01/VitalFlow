@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",
+    "autoprefixer": "^10.5.4",
     "next": "^15.0.0",
     "papaparse": "^5.4.1",
     "react": "^19.0.0",
