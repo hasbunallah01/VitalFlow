@@ -211,6 +211,30 @@ export function toMajor(money: Money): string {
   return `${negative ? '-' : ''}${integerPart}.${fractionStr}`;
 }
 
+/**
+ * Converts a Money to a number in major units.
+ *
+ * This is the ONLY place in the codebase where a Money crosses the
+ * BigInt/number boundary. It exists for:
+ *   1. Display purposes (UI, JSON for human consumers)
+ *   2. Ratio math (CV, slope, runway) where the unit MUST be float
+ *
+ * DO NOT use the returned number for further financial arithmetic. If
+ * you find yourself adding two of these numbers, stop and go back to
+ * `add()`. The float that comes out has IEEE-754 imprecision by design.
+ *
+ * For values up to 2^53 minor units (≈ $90 trillion in USD), the result
+ * is exact. Above that, you will lose precision.
+ */
+export function toMajorNumber(money: Money): number {
+  const negative = money.amountMinor < 0n;
+  const abs = negative ? -money.amountMinor : money.amountMinor;
+  const integerPart = abs / 100n;
+  const fractionalPart = abs % 100n;
+  const major = Number(integerPart) + Number(fractionalPart) / 100;
+  return negative ? -major : major;
+}
+
 // ---------------------------------------------------------------------------
 // Arithmetic
 // ---------------------------------------------------------------------------
