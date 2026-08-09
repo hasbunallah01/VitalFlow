@@ -1,14 +1,20 @@
 name: CI
 
+# Triggers: every push to main, every PR targeting main.
+# We intentionally keep the trigger list minimal. Adding a workflow_dispatch
+# or schedule trigger would create additional failure emails for no reason.
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# Note: this file was previously more complex (a concurrency block + a
+# conditional `app` job gated on package-lock.json). The complex version
+# produced a "No jobs were run" error on every push — the run never even
+# started. We've simplified it to just the docs-existence check. The
+# `app` job (lint / typecheck / test / build) will be added back once the
+# Next.js app exists in app/.
 
 jobs:
   docs:
@@ -34,23 +40,3 @@ jobs:
             exit 1
           fi
           echo "No environment files tracked."
-
-  app:
-    name: Lint, typecheck, test
-    runs-on: ubuntu-latest
-    # Skipped until the application is implemented (no lockfile yet).
-    if: ${{ hashFiles('package-lock.json') != '' }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-
-      - run: npm ci
-      - run: npx prisma generate
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run test
-      - run: npm run build
