@@ -313,11 +313,12 @@ export function div(money: Money, divisor: number | bigint, mode: RoundingMode =
       }
       break;
     }
-    default:
-      // Exhaustiveness check
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const _exhaustive: never = mode;
-      throw new Error(`Unknown rounding mode: ${String(mode)}`);
+    default: {
+      // Exhaustiveness check — if a new RoundingMode is added without
+      // updating this switch, TS will complain at the assignment below.
+      const exhaustive: never = mode;
+      throw new Error(`Unknown rounding mode: ${String(exhaustive)}`);
+    }
   }
 
   return { amountMinor: negative ? -result : result, currency: money.currency };

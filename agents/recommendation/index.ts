@@ -13,7 +13,7 @@
 import type { Agent, AgentContext, AgentResult } from '../../types/agent';
 import type { HealthAssessment } from '../../types/analysis';
 import type { LLMClient } from '../../lib/llm/client';
-import { generateRawRecommendations, type RawRecommendation } from './rules';
+import { generateRawRecommendations } from './rules';
 import { renderRecommendationPrompt } from './prompts';
 
 export interface RecommendationInput {

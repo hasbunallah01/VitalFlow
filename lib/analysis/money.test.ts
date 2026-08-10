@@ -38,7 +38,7 @@ import {
   DivisionByZeroError,
 } from './money';
 
-import type { Money, CurrencyCode } from '../../types/money';
+import type { CurrencyCode } from '../../types/money';
 
 const XCD: CurrencyCode = 'XCD';
 const USD: CurrencyCode = 'USD';

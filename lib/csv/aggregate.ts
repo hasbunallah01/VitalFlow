@@ -9,7 +9,7 @@
  * category is "other". This keeps the math explainable and auditable.
  */
 
-import type { Transaction, Statement } from '../../types/transaction';
+import type { Statement } from '../../types/transaction';
 import type {
   ExpenseCategory,
   MonthlyAggregate,

@@ -13,10 +13,7 @@
  *     templated text instead of LLM prose.
  */
 
-import type {
-  HealthAssessment,
-  MonthlyAggregate,
-} from '../../types/analysis';
+import type { HealthAssessment } from '../../types/analysis';
 import type { WatchEventType } from '@prisma/client';
 
 export interface DetectedEvent {

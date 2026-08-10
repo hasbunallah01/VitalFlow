@@ -204,11 +204,6 @@ export function computeRiskPillar(
   // max for no deduct). Cleaner: each metric represents "absence of risk"
   // and is scored 0..max.
 
-  const returnedPoints = clamp(
-    max - Math.min(input.returnedPayments * RETURNED_DEDUCT_PER, RETURNED_DEDUCT_MAX),
-    0,
-    max,
-  ) * (2 / max);
   // For risk, we use a 0..max scheme where 0 = worst (full deduct), max = best.
   // To keep the convention that contribution is in [0, max] per metric,
   // we model: contribution = max - deduction, normalized per-event.

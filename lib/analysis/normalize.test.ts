@@ -12,7 +12,6 @@ import {
   hhi,
   round1,
   round2,
-  EPS,
 } from './normalize';
 
 describe('clamp', () => {
