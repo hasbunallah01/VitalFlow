@@ -69,8 +69,12 @@ export interface LLMConfig {
 export function loadLLMConfig(env: NodeJS.ProcessEnv = process.env): LLMConfig {
   const baseUrl = env.LLM_BASE_URL || env.NEBIUS_BASE_URL || 'https://api.tokenfactory.nebius.com/v1';
   const apiKey = env.LLM_API_KEY || env.NEBIUS_API_KEY || '';
-  const model = env.LLM_MODEL || env.NEBIUS_MODEL || 'deepseek-ai/DeepSeek-V4-Flash';
-  const temperature = Number(env.LLM_TEMPERATURE ?? env.NEBIUS_TEMPERATURE ?? '0.2');
+  // Qwen 3 30B is the default. DeepSeek-V4-Flash had a known issue with
+  // strict response_format:json_object on Nebius (returned content: null
+  // ~50% of the time). Qwen is reliable, ~10x faster, and slightly cheaper.
+  // Override via LLM_MODEL or NEBIUS_MODEL if you need a different model.
+  const model = env.LLM_MODEL || env.NEBIUS_MODEL || 'Qwen/Qwen3-30B-A3B-Instruct-2507';
+  const temperature = Number(env.LLM_TEMPERATURE ?? env.NEBIUS_TEMPERATURE ?? '0.3');
   const timeoutMs = Number(env.LLM_TIMEOUT_MS ?? env.NEBIUS_TIMEOUT_MS ?? '30000');
   const maxRetries = Number(env.LLM_MAX_RETRIES ?? env.NEBIUS_MAX_RETRIES ?? '2');
   return { baseUrl, apiKey, model, temperature, timeoutMs, maxRetries };
