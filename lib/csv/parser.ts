@@ -226,9 +226,14 @@ export function parseStatement(
       // Skip empty rows (totals, blank lines masquerading as rows)
       continue;
     }
-    const amount: Money = w > 0
-      ? fromMajor((-w).toFixed(2), options.currency) // withdrawal = outflow = negative
-      : fromMajor(dep.toFixed(2), options.currency);
+    // A withdrawal in the source is a positive magnitude (most banks) OR
+    // a signed value (legacy systems that write "(50.00)" or "-50.00").
+    // We treat the absolute value as the magnitude and let the sign stay
+    // negative when the source already encoded it that way.
+    const wMagnitude = Math.abs(w);
+    const amount: Money = wMagnitude > 0
+      ? fromMajor((-wMagnitude).toFixed(2), options.currency) // withdrawal = outflow = negative
+      : fromMajor(Math.abs(dep).toFixed(2), options.currency);
     const bal = balRaw ? parseAmount(balRaw) : NaN;
     const balanceAfterMinor = Number.isFinite(bal) ? BigInt(Math.round(bal * 100)) : undefined;
     const id = `tx_${sha256Hex(`${statementId}:${i}:${date}:${w}:${dep}:${narrStr}`).slice(0, 16)}`;

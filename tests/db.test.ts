@@ -173,6 +173,50 @@ describeIfDb('db: full pipeline round-trip (live Postgres)', () => {
       where: { statementId: result.statementId, counterpartyId: { not: null } },
     });
     expect(linked).toBeGreaterThan(0);
+
+    // The totalInflowMinor / totalOutflowMinor / transactionCount fields
+    // on Counterparty should be 0 (we don't maintain them at insert time
+    // — that's a Phase 2 background job). We just confirm the columns exist
+    // and are queryable.
+    const sumCp = await db.counterparty.aggregate({
+      where: { organizationId },
+      _sum: { totalInflowMinor: true, totalOutflowMinor: true, transactionCount: true },
+    });
+    expect(sumCp._sum.totalInflowMinor).toBe(0n);
+  }, 60_000);
+
+  it('cascades: deleting the org deletes its counterparties', async () => {
+    // Set up a fresh org with counterparties, then delete it, and verify
+    // the counterparties are gone (the cascade).
+    const scratch = await createOrganization(db, {
+      name: `Scratch ${runId}-cascade`,
+      defaultCurrency: 'XCD',
+    });
+    const csv = readFileSync(FIXTURE, 'utf-8');
+    const { statement } = parseStatement(csv, {
+      organizationId: scratch.id,
+      accountId: 'acc_cascade',
+      currency: 'XCD',
+      filename: 'cascade.csv',
+    });
+    const agg = aggregateByMonth(statement);
+    await persistFullPipeline(db, {
+      organizationId: scratch.id,
+      statement,
+      fileRef: `test/${runId}/cascade.csv`,
+      sizeBytes: csv.length,
+      monthly: agg.monthly,
+      returnedPayments: agg.returnedPayments,
+      loanPaymentTotal: agg.loanPaymentTotal,
+    });
+
+    const before = await db.counterparty.count({ where: { organizationId: scratch.id } });
+    expect(before).toBeGreaterThan(0);
+
+    await db.organization.delete({ where: { id: scratch.id } });
+
+    const after = await db.counterparty.count({ where: { organizationId: scratch.id } });
+    expect(after).toBe(0);
   }, 60_000);
 });
 
