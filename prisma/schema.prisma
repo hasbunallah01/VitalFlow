@@ -218,7 +218,7 @@ model Analysis {
   recommendations Recommendation[]
   riskFlags       RiskFlag[]
   recurringSeries RecurringSeries[]
-  report          Report?
+  reports         Report[]
   fundingOutreaches FundingOutreach[]
   watchEvents     WatchEvent[]
   deltaRecordsAsCurrent  DeltaRecord[] @relation("DeltaCurrent")
@@ -317,7 +317,9 @@ model RiskFlag {
 
 model Report {
   id                String   @id @default(cuid())
-  analysisId        String   @unique
+  // One Analysis can produce multiple Reports (e.g. the standard
+  // health PDF + per-funding-outreach evidence packs). Not unique.
+  analysisId        String
   pdfRef            String
   model             Json
   pages             Int
