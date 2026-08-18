@@ -5,7 +5,7 @@
 > Build window: **August 9 → August 30, 2026** (22 days)
 > Submission deadline: **August 30, 2026 at midnight AST**
 > Owner: hasbunallah01
-> Status: 🟢 Checkpoint 3 (agentic loop v1) complete; well ahead of plan
+> Status: 🟢 Checkpoint 5 (Funding Outreach + Lender API) complete; well ahead of plan
 
 ---
 
@@ -17,6 +17,7 @@
 | 4–5 | Aug 12 – Aug 13 | CSV ingestion (`lib/csv/`) | ✅ **Complete** — folded into Checkpoint 1 |
 | 6–7 | Aug 14 – Aug 15 | Database + auth (`User`, `Membership`, `FundingOutreach`) | ✅ **Complete** — Neon live, 20 tables, auth deferred to polish |
 | 8–10 | Aug 16 – Aug 18 | Agentic loop v1 (Watcher + Recommendation) | ✅ **Complete** — 5 watch rules + 8 recommendation rules, 21 mocked + 2 live DeepSeek tests |
+| 11–14 | Aug 19 – Aug 22 | Agentic loop v2 (Funding Outreach + Lender API) | ✅ **Complete** — 7 real Caribbean programs, eligibility engine, Approver state machine, 26 new tests |
 | 11–14 | Aug 19 – Aug 22 | Agentic loop v2 (Funding Outreach + Lender API) | ⬜ Next |
 | 15–17 | Aug 23 – Aug 25 | UI (upload, progress, dashboard, funding plan) | ⬜ |
 | 18–19 | Aug 26 – Aug 27 | Polish + audit trail UI + mobile pass + real auth | ⬜ |
