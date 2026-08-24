@@ -1,13 +1,19 @@
 /**
  * POST /api/upload
  *
- * Accepts a multipart/form-data upload (field name: `file`),
- * parses the CSV using the EXISTING lib/csv/parser (no business
- * logic changed), aggregates with the EXISTING lib/csv/aggregate,
- * and persists via the EXISTING lib/db/persist.persistFullPipeline.
+ * End-to-end ingestion:
+ *   1. Parse the CSV (lib/csv/parser — no business logic changed)
+ *   2. Aggregate by month (lib/csv/aggregate)
+ *   3. Persist Statement + Transactions + Analysis (lib/db/persist)
+ *   4. Run the orchestrator (lib/orchestrator) — Watcher + Insight +
+ *      Funding Outreach, each writing its own AgentRun row and
+ *      persisting WatchEvent / Recommendation / FundingOutreach rows
  *
- * Returns the resulting analysisId. Caller then redirects to
- * /analysis/[id] which calls /api/analyses/[id] for the dashboard.
+ * Real backend, real LLM, real DB. No mock data. If the LLM is
+ * unavailable or a rule blocks, the orchestrator falls back to
+ * templated text (the agents already implement that) and the upload
+ * still returns 200 with the analysisId — the analysis row is
+ * persisted regardless of agent outcome.
  */
 
 import { NextResponse } from 'next/server';
@@ -16,8 +22,13 @@ import { aggregateByMonth } from '@/lib/csv/aggregate';
 import { persistFullPipeline } from '@/lib/db/persist';
 import { prisma } from '@/lib/db/client';
 import { getOrCreateDevSession } from '@/lib/auth/dev';
+import { runAgentsForAnalysis } from '@/lib/orchestrator';
 
 export const dynamic = 'force-dynamic';
+// 60s is enough for the deterministic pipeline (1-2s) plus the 3
+// agents (3-6 sequential LLM calls, each 1-5s on Qwen 3 30B via
+// Nebius). If an LLM call times out, the orchestrator still persists
+// the AgentRun with status='failed' — the analysis row is unaffected.
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
@@ -56,6 +67,21 @@ export async function POST(req: Request) {
     returnedPayments: agg.returnedPayments,
     loanPaymentTotal: agg.loanPaymentTotal,
   });
+
+  // 4. Run the orchestrator. The analysis row is already persisted;
+  //    the agents layer on top of it. If any agent fails, the upload
+  //    still returns 200 — the analysis is the user-facing artifact.
+  let orchestratorResult: Awaited<ReturnType<typeof runAgentsForAnalysis>> | null = null;
+  let orchestratorError: string | null = null;
+  try {
+    orchestratorResult = await runAgentsForAnalysis(
+      result.analysisId,
+      session.organizationId,
+    );
+  } catch (e) {
+    orchestratorError = e instanceof Error ? e.message : String(e);
+  }
+
   return NextResponse.json({
     analysisId: result.analysisId,
     score: result.score,
@@ -64,5 +90,37 @@ export async function POST(req: Request) {
     transactionsParsed: statement.transactions.length,
     monthsAnalyzed: agg.monthly.length,
     parseErrors: errors.length,
+    agents: orchestratorResult
+      ? {
+          watcher: {
+            ran: orchestratorResult.watcher.ran,
+            eventsCreated: orchestratorResult.watcher.eventsCreated,
+            status: orchestratorResult.watcher.run.status,
+            model: orchestratorResult.watcher.run.model,
+            durationMs: orchestratorResult.watcher.run.durationMs,
+            tokensIn: orchestratorResult.watcher.run.tokensIn,
+            tokensOut: orchestratorResult.watcher.run.tokensOut,
+          },
+          insight: {
+            ran: orchestratorResult.insight.ran,
+            recommendationsCreated: orchestratorResult.insight.recommendationsCreated,
+            status: orchestratorResult.insight.run.status,
+            model: orchestratorResult.insight.run.model,
+            durationMs: orchestratorResult.insight.run.durationMs,
+          },
+          funding: {
+            ran: orchestratorResult.funding.ran,
+            outreachId: orchestratorResult.funding.outreachId,
+            eligibleCount: orchestratorResult.funding.eligibleCount,
+            almostCount: orchestratorResult.funding.almostCount,
+            recommendedProgramId: orchestratorResult.funding.recommendedProgramId,
+            status: orchestratorResult.funding.run.status,
+            model: orchestratorResult.funding.run.model,
+            durationMs: orchestratorResult.funding.run.durationMs,
+          },
+          totalDurationMs: orchestratorResult.totalDurationMs,
+        }
+      : null,
+    orchestratorError,
   });
 }

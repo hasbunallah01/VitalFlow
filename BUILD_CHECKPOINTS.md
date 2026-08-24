@@ -206,6 +206,21 @@ The headline demo flow works end-to-end: cron fires → Matchmaker drafts plan �
 
 **Goal:** The visible layer, mobile-first.
 
+### Backend deployed to Vercel (2026-08-19)
+- Project: `hasbunallah/vitalflow` (Vercel) ↔ `hasbunallah01/VitalFlow` (GitHub), auto-deploy on push
+- Live URL: `https://vitalflow-83k6terny-hasbunallah.vercel.app`
+- 4 serverless API routes deployed & verified (all 200, real data, real DB):
+  - `GET  /api/dev/session`      → dev user bootstrap
+  - `GET  /api/analyses`         → list of org's analyses
+  - `GET  /api/analyses/[id]`    → full overview JSON (pillars, monthly, anomalies)
+  - `POST /api/upload`           → CSV → parse → aggregate → persist (75.4/100 Healthy golden confirmed live)
+- Env vars set: `DATABASE_URL` (Neon pooler), `NEBIUS_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`
+- Build: `prisma generate && next build` (48–57s), no errors
+- Vercel-side config: framework=nextjs, SSO protection disabled
+- Live test from this session: uploaded 230-transaction sample, got 75.4/100 Healthy back
+
+### Deliverables
+
 ### Deliverables
 - [ ] `app/(marketing)/page.tsx` — landing page
 - [ ] `app/(dashboard)/statements/new/page.tsx` — upload (drag-drop, currency override)
