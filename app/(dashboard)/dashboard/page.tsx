@@ -1,16 +1,17 @@
 import Link from 'next/link';
-import { ArrowRight, AlertTriangle, FileText, History, Sparkles } from 'lucide-react';
+import { ArrowRight, AlertTriangle, FileText, History } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardSubtitle, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScoreGauge } from '@/components/dashboard/score-gauge';
 import { PillarCard } from '@/components/dashboard/pillar-card';
+import { AgentPulse } from '@/components/dashboard/agent-pulse';
 import { MonthlyTrendChart } from '@/components/charts/monthly-trend-chart';
 import { RerunAgentsButton } from '@/components/dashboard/rerun-agents-button';
 import { UploadZone } from '@/components/upload/upload-zone';
 import { getLatestOverview, getAnalyses, getAudit } from '@/lib/api/client';
-import { bandColor, formatDate, formatNumber, timeAgo } from '@/lib/utils/format';
+import { bandColor, formatDate, formatNumber } from '@/lib/utils/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,6 +35,7 @@ export default async function DashboardPage() {
   const recs = audit.recommendations ?? [];
   const watches = audit.watchEvents ?? [];
   const anomalies = overview.anomalies.details ?? [];
+  const agentRuns = audit.agentRuns ?? [];
 
   return (
     <div className="space-y-6">
@@ -43,31 +45,31 @@ export default async function DashboardPage() {
         action={<RerunAgentsButton />}
       />
 
+      {/* Agent pulse — the "AI is working" centerpiece */}
+      <div>
+        <div className="mb-2 flex items-center gap-2">
+          <h2 className="text-meta-sm font-semibold uppercase tracking-wider text-text-secondary">
+            Agents
+          </h2>
+          <span className="text-meta-sm text-text-secondary">· live</span>
+        </div>
+        <AgentPulse runs={agentRuns} />
+      </div>
+
       {/* Top row: score + 5 pillars */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="lg:row-span-2">
+        <Card className="lg:row-span-2 overflow-hidden">
           <CardHeader>
             <CardSubtitle>Financial Health Score</CardSubtitle>
             <CardTitle>{overview.band}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center pt-0">
-            <ScoreGauge score={overview.score} band={overview.band} size={220} />
+            <ScoreGauge score={overview.score} band={overview.band} size={280} />
             <div className="mt-6 grid w-full grid-cols-3 gap-2 border-t border-border pt-4">
               <Stat label="Months" value={formatNumber(overview.monthsAnalyzed)} />
               <Stat label="Currency" value={overview.currency} />
               <Stat label="Confidence" value={`${Math.round((overview.confidence ?? 0) * 100)}%`} />
             </div>
-            {latestRun ? (
-              <div className="mt-4 w-full rounded-lg bg-canvas px-3 py-2.5 text-meta-sm text-text-secondary">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-3.5 w-3.5 text-brand-teal" />
-                  <span className="font-medium text-text-primary">Agents ran {timeAgo(latestRun.startedAt)}</span>
-                </div>
-                <div className="mt-0.5 text-meta-sm text-text-secondary">
-                  {latestRun.agent} · {latestRun.model ?? '—'} · {latestRun.durationMs}ms
-                </div>
-              </div>
-            ) : null}
           </CardContent>
         </Card>
 
