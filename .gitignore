@@ -2,6 +2,7 @@
 node_modules/
 .pnp
 .pnp.js
+public/brand/_exploration/
 
 # next
 .next/
@@ -48,3 +49,4 @@ Thumbs.db
 *.tsbuildinfo
 next-env.d.ts
 .env*
+public/brand/

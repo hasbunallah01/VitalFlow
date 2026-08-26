@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* -----------------------------------------------------------------------
+ * VitalFlow — Global styles
+ * Light, calm, premium. The brand does the work; the surface is a canvas.
+ * -------------------------------------------------------------------- */
+
+/* Inter via @import so the build doesn't need to fetch the font at
+ * build time. The browser fetches the woff2 at runtime. If offline,
+ * the font falls back to the system stack in tailwind.config.ts. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap');
+
+:root {
+  --background: #F8FAFC;
+  --foreground: #172033;
+  --card: #FFFFFF;
+  --border: #E5EAF0;
+  --brand: #155EEF;
+  --brand-bright: #2F80ED;
+  --teal: #16B8A6;
+  --mint: #35D0BA;
+  --navy: #0B1F3A;
+  --secondary-text: #64748B;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Tabular numbers for financial figures */
+.tabular-nums,
+.financial {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scrollbar — calm, not loud */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 8px;
+  border: 2px solid var(--background);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #CBD5E1;
+}
+
+/* Focus rings — visible but quiet */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Selection */
+::selection {
+  background: rgba(21, 94, 239, 0.15);
+  color: var(--navy);
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #F1F5F9 0%,
+    #E2E8F0 50%,
+    #F1F5F9 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: 6px;
+}
+
+/* Recharts — calmer defaults */
+.recharts-cartesian-axis-tick text {
+  fill: var(--secondary-text);
+  font-size: 12px;
+}
+.recharts-cartesian-grid line {
+  stroke: #F1F5F9;
+}
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}
