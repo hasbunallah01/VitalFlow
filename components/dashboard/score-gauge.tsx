@@ -12,16 +12,15 @@ interface ScoreGaugeProps {
 }
 
 /**
- * Score gauge v2 — a clean semicircular gauge with a thick teal-to-blue
- * arc that fills based on the score. The number is large and tabular,
- * the arc is the brand gradient, and there's a soft ambient glow
- * behind the gauge. The number animates from 0 to the target on mount.
+ * Score gauge — clean semicircular gauge with a brand-gradient arc.
+ * Subtle, refined. No ambient glow halo (the new brief says no huge
+ * glowing effects). Number animates from 0 to the target on mount.
  */
-export function ScoreGauge({ score, band, size = 280, showLabel = true }: ScoreGaugeProps) {
-  const stroke = 18;
+export function ScoreGauge({ score, band, size = 240, showLabel = true }: ScoreGaugeProps) {
+  const stroke = 14;
   const radius = (size - stroke) / 2;
   const cx = size / 2;
-  const cy = size / 2 + 14;
+  const cy = size / 2 + 12;
   const startAngle = 180;
   const endAngle = 360;
   const totalArc = endAngle - startAngle;
@@ -33,12 +32,11 @@ export function ScoreGauge({ score, band, size = 280, showLabel = true }: ScoreG
   const colors = bandColor(band);
   const bandHex = bandHexColor(band);
 
-  // Animated counter
   const count = useMotionValue(0);
   const rounded = useTransform(count, (latest) => latest.toFixed(0));
   useEffect(() => {
     const controls = animate(count, score, {
-      duration: 1.1,
+      duration: 0.9,
       ease: [0.4, 0, 0.2, 1],
     });
     return controls.stop;
@@ -46,27 +44,15 @@ export function ScoreGauge({ score, band, size = 280, showLabel = true }: ScoreG
 
   return (
     <div className="relative inline-flex flex-col items-center" style={{ width: size }}>
-      <div
-        aria-hidden
-        className="absolute left-1/2 top-1/2 -z-10 h-3/4 w-3/4 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-50 blur-3xl animate-glow-breathe"
-        style={{ background: `radial-gradient(circle, ${bandHex}33 0%, transparent 70%)` }}
-      />
-
-      <svg width={size} height={size * 0.65} viewBox={`0 0 ${size} ${size * 0.65}`} className="overflow-visible">
+      <svg width={size} height={size * 0.65} viewBox={`0 0 ${size} ${size * 0.65}`}>
         <defs>
           <linearGradient id="score-grad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#16B8A6" />
-            <stop offset="55%" stopColor="#2F80ED" />
-            <stop offset="100%" stopColor="#155EEF" />
+            <stop offset="0%" stopColor="#48D8C2" />
+            <stop offset="55%" stopColor="#20BFE8" />
+            <stop offset="100%" stopColor="#1677E8" />
           </linearGradient>
         </defs>
-        <path
-          d={bgPath}
-          fill="none"
-          stroke="#E2E8F0"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-        />
+        <path d={bgPath} fill="none" stroke="#E6ECF3" strokeWidth={stroke} strokeLinecap="round" />
         <motion.path
           d={fillPath}
           fill="none"
@@ -75,24 +61,20 @@ export function ScoreGauge({ score, band, size = 280, showLabel = true }: ScoreG
           strokeLinecap="round"
           initial={{ pathLength: 0 }}
           animate={{ pathLength: 1 }}
-          transition={{ duration: 1.1, ease: [0.4, 0, 0.2, 1] }}
-          style={{ filter: 'drop-shadow(0 4px 12px rgba(47,128,237,0.35))' }}
+          transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
         />
       </svg>
 
-      <div className="-mt-16 text-center">
+      <div className="-mt-12 text-center">
         <div className="flex items-baseline justify-center gap-1">
-          <motion.span className="text-[64px] font-bold leading-none tracking-tight text-brand-navy">
+          <motion.span className="text-score font-bold leading-none tracking-tight text-text-primary">
             {rounded}
           </motion.span>
-          <span className="text-h3 text-text-secondary">/ 100</span>
+          <span className="text-h3 text-text-muted">/ 100</span>
         </div>
         {showLabel ? (
-          <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-card px-3 py-1 shadow-card">
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: bandHex }}
-            />
+          <div className="mt-2 inline-flex items-center gap-1.5 rounded-pill bg-card px-2.5 py-0.5 shadow-card">
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: bandHex }} />
             <span className={`text-meta-sm font-semibold uppercase tracking-wider ${colors.text}`}>
               {band}
             </span>
@@ -117,10 +99,10 @@ function describeArc(cx: number, cy: number, r: number, startAngle: number, endA
 
 function bandHexColor(band: string): string {
   const b = (band ?? '').toLowerCase();
-  if (b === 'strong') return '#16B8A6';
-  if (b === 'healthy') return '#22C55E';
-  if (b === 'watch') return '#F59E0B';
-  if (b === 'fragile') return '#EA580C';
-  if (b === 'critical') return '#DC2626';
-  return '#94A3B8';
+  if (b === 'strong') return '#18A875';
+  if (b === 'healthy') return '#48D8C2';
+  if (b === 'watch') return '#F4A62A';
+  if (b === 'fragile') return '#F07A3F';
+  if (b === 'critical') return '#E85C5C';
+  return '#8A98AA';
 }

@@ -4,19 +4,19 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
+  LineChart,
   Lightbulb,
   Wallet,
-  History,
-  ShieldCheck,
+  Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
-const items = [
+const ITEMS = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+  { href: '/analysis', label: 'Analysis', icon: LineChart },
   { href: '/insights', label: 'Insights', icon: Lightbulb },
   { href: '/funding', label: 'Funding', icon: Wallet },
-  { href: '/history', label: 'History', icon: History },
-  { href: '/audit', label: 'Audit', icon: ShieldCheck },
+  { href: '/activity', label: 'Activity', icon: Activity },
 ];
 
 export function MobileNav() {
@@ -27,7 +27,7 @@ export function MobileNav() {
       aria-label="Primary"
     >
       <ul className="grid grid-cols-5">
-        {items.map(({ href, label, icon: Icon }) => {
+        {ITEMS.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/');
           return (
             <li key={href}>

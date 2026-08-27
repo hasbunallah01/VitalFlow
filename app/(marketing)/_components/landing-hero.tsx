@@ -1,67 +1,43 @@
 import Link from 'next/link';
 import { ArrowRight, Sparkles, ShieldCheck, Bot, Eye, Wallet, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AgentPulseDot } from '@/components/dashboard/agent-pulse';
 
 export function LandingHero() {
   return (
     <section className="relative overflow-hidden">
-      {/* Ambient background — soft animated gradient blobs + subtle grid */}
-      <div aria-hidden className="absolute inset-0 -z-10">
-        <div
-          className="absolute left-1/4 top-1/4 h-[480px] w-[480px] rounded-full opacity-50 blur-3xl animate-ambient-1"
-          style={{ background: 'radial-gradient(circle, rgba(47,128,237,0.35) 0%, transparent 70%)' }}
-        />
-        <div
-          className="absolute right-1/4 top-1/2 h-[420px] w-[420px] rounded-full opacity-40 blur-3xl animate-ambient-2"
-          style={{ background: 'radial-gradient(circle, rgba(22,184,166,0.3) 0%, transparent 70%)' }}
-        />
-        <div
-          className="absolute left-1/2 bottom-0 h-[320px] w-[320px] -translate-x-1/2 rounded-full opacity-25 blur-3xl animate-ambient-1"
-          style={{ background: 'radial-gradient(circle, rgba(53,208,186,0.3) 0%, transparent 70%)' }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.35]"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(15,23,42,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.04) 1px, transparent 1px)',
-            backgroundSize: '48px 48px',
-            maskImage: 'radial-gradient(ellipse at center, black 0%, transparent 70%)',
-            WebkitMaskImage: 'radial-gradient(ellipse at center, black 0%, transparent 70%)',
-          }}
-        />
-      </div>
+      {/* Subtle background — single soft radial wash, no aggressive blobs */}
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10"
+        style={{
+          background:
+            'radial-gradient(60% 50% at 70% 0%, rgba(72,216,194,0.12) 0%, rgba(255,255,255,0) 60%),' +
+            'radial-gradient(50% 50% at 0% 80%, rgba(22,119,232,0.08) 0%, rgba(255,255,255,0) 60%),' +
+            'linear-gradient(180deg, #FFFFFF 0%, #F7F9FC 100%)',
+        }}
+      />
 
-      <div className="mx-auto max-w-6xl px-6 pb-24 pt-14 md:pb-32 md:pt-20">
+      <div className="mx-auto max-w-6xl px-6 pb-24 pt-16 md:pb-32 md:pt-24">
         <div className="grid items-center gap-14 md:grid-cols-2">
           <div>
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-3 py-1 text-meta-sm text-text-secondary shadow-card backdrop-blur">
-              <span className="relative inline-flex h-2 w-2">
-                <span className="absolute inset-0 animate-pulse-ring rounded-full bg-positive/40" />
-                <span className="relative inline-block h-2 w-2 rounded-full bg-positive" />
-              </span>
+            <div className="mb-5 inline-flex items-center gap-2 rounded-pill border border-border bg-card px-3 py-1 text-meta-sm text-text-secondary">
+              <span className="h-1.5 w-1.5 rounded-full bg-positive" />
               FutureCaribbean 2026 · Finance, Payments &amp; MSME Capital
             </div>
 
-            <h1 className="text-[44px] font-bold leading-[1.05] tracking-tight text-brand-navy md:text-[56px] md:leading-[1.02]">
-              Know the health of your business{' '}
-              <span className="relative inline-block">
-                <span className="relative z-10 bg-gradient-to-r from-brand-teal via-brand-bright to-brand bg-clip-text text-transparent">
-                  before it becomes a problem.
-                </span>
-              </span>
+            <h1 className="text-[44px] font-bold leading-[1.05] tracking-tight text-text-primary md:text-[56px] md:leading-[1.02]">
+              Financial intelligence for your business.
             </h1>
 
             <p className="mt-5 max-w-xl text-body text-text-secondary md:text-h5 md:font-normal">
-              VitalFlow turns your financial data into clear analysis, ranked recommendations,
-              and funding opportunities — powered by three real AI agents, not templates.
+              Turn your financial data into clear decisions, actionable insights, and
+              funding opportunities — powered by three real AI agents that keep working
+              for your business.
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <Link href="/auth/sign-up">
-                <Button size="lg" className="px-6 shadow-glow-brand">
-                  Get started <ArrowRight className="h-4 w-4" />
-                </Button>
+                <Button size="lg" className="px-6">Get started <ArrowRight className="h-4 w-4" /></Button>
               </Link>
               <Link href="#how-it-works">
                 <Button size="lg" variant="secondary">See how it works</Button>
@@ -73,10 +49,10 @@ export function LandingHero() {
                 <ShieldCheck className="h-4 w-4 text-brand-teal" /> Your data, your control
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Bot className="h-4 w-4 text-brand-bright" /> 3 real AI agents
+                <Bot className="h-4 w-4 text-brand" /> 3 real AI agents
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Sparkles className="h-4 w-4 text-band-watch" /> Open source · MIT
+                <Sparkles className="h-4 w-4 text-warning" /> Open source · MIT
               </span>
             </div>
           </div>
@@ -91,53 +67,37 @@ export function LandingHero() {
 function HeroPreview() {
   return (
     <div className="relative">
-      <div
-        aria-hidden
-        className="absolute -inset-6 -z-10 rounded-3xl opacity-60 blur-3xl"
-        style={{
-          background:
-            'radial-gradient(ellipse at top right, rgba(22,184,166,0.35) 0%, transparent 60%),' +
-            'radial-gradient(ellipse at bottom left, rgba(21,94,239,0.3) 0%, transparent 60%)',
-        }}
-      />
-
-      <div className="relative rounded-card border border-border bg-card/90 p-6 shadow-card-hover backdrop-blur">
+      <div className="rounded-card border border-border bg-card p-6 shadow-card-hover">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <div
-                aria-hidden
-                className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-brand-teal to-brand opacity-50 blur-md"
-              />
-              <img
-                src="/brand/vitalflow-logo-icon.png"
-                alt="VitalFlow"
-                className="relative h-11 w-11 rounded-2xl"
-              />
-            </div>
+            <img
+              src="/brand/vitalflow-logo-icon.png"
+              alt="VitalFlow"
+              className="h-10 w-10 rounded-2xl"
+            />
             <div>
               <div className="text-h5 font-semibold text-text-primary">VitalFlow</div>
               <div className="text-meta-sm text-text-secondary">Financial Intelligence</div>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full bg-positive-muted px-2.5 py-1 text-meta-sm font-medium text-positive ring-1 ring-inset ring-positive/20">
+          <div className="flex items-center gap-1.5 rounded-pill bg-positive-muted px-2.5 py-1 text-meta-sm font-medium text-positive">
             <span className="h-1.5 w-1.5 rounded-full bg-positive" />
-            Agents watching
+            Live
           </div>
         </div>
 
         <div className="mt-5 flex items-end gap-5">
           <div>
-            <div className="text-meta-sm uppercase tracking-wider text-text-secondary">
+            <div className="text-meta-sm uppercase tracking-wider text-text-muted">
               Financial Health Score
             </div>
             <div className="mt-1 flex items-baseline gap-2">
-              <div className="text-[56px] font-bold leading-none tracking-tight text-brand-navy tabular-nums">
+              <div className="text-[56px] font-bold leading-none tracking-tight text-text-primary tabular-nums">
                 75
               </div>
-              <div className="text-h4 text-text-secondary">/ 100</div>
+              <div className="text-h4 text-text-muted">/ 100</div>
             </div>
-            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-band-healthy/10 px-2.5 py-0.5 text-meta-sm font-medium text-band-healthy ring-1 ring-inset ring-band-healthy/20">
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-pill bg-positive-muted px-2.5 py-0.5 text-meta-sm font-medium text-positive">
               Healthy
             </div>
           </div>
@@ -146,8 +106,8 @@ function HeroPreview() {
             <svg viewBox="0 0 120 60" className="h-full w-full">
               <defs>
                 <linearGradient id="hero-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#16B8A6" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="#16B8A6" stopOpacity="0" />
+                  <stop offset="0%" stopColor="#48D8C2" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#48D8C2" stopOpacity="0" />
                 </linearGradient>
               </defs>
               <path
@@ -157,7 +117,7 @@ function HeroPreview() {
               <path
                 d="M0 45 L15 38 L30 32 L45 35 L60 22 L75 18 L90 12 L105 15 L120 6"
                 fill="none"
-                stroke="#16B8A6"
+                stroke="#20BFE8"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -166,12 +126,12 @@ function HeroPreview() {
           </div>
         </div>
 
-        <div className="mt-5 space-y-2">
+        <div className="mt-5 space-y-2.5">
           {[
             { label: 'Cash Flow', value: 80, color: 'bg-brand' },
-            { label: 'Revenue', value: 80, color: 'bg-brand-teal' },
-            { label: 'Expenses', value: 75, color: 'bg-brand-bright' },
-            { label: 'Liquidity', value: 60, color: 'bg-band-watch' },
+            { label: 'Revenue', value: 80, color: 'bg-brand-turquoise' },
+            { label: 'Expenses', value: 75, color: 'bg-brand-cyan' },
+            { label: 'Liquidity', value: 60, color: 'bg-warning' },
             { label: 'Risk', value: 70, color: 'bg-positive' },
           ].map((p) => (
             <div key={p.label} className="flex items-center gap-3">
@@ -192,7 +152,7 @@ function HeroPreview() {
           <AgentPill icon={Wallet} label="Funding" tone="amber" />
         </div>
 
-        <div className="mt-4 text-meta-sm italic text-text-secondary">
+        <div className="mt-4 text-meta-sm italic text-text-muted">
           Illustrative preview · not real data
         </div>
       </div>
@@ -210,14 +170,14 @@ function AgentPill({
   tone: 'teal' | 'brand' | 'amber';
 }) {
   const toneClasses: Record<typeof tone, string> = {
-    teal: 'text-brand-teal',
-    brand: 'text-brand',
-    amber: 'text-warning',
+    teal: 'text-brand-teal bg-brand-teal/10',
+    brand: 'text-brand bg-brand/10',
+    amber: 'text-warning bg-warning/10',
   };
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-border bg-canvas px-2.5 py-2">
-      <AgentPulseDot tone={tone} size={8} />
-      <Icon className={`h-3.5 w-3.5 ${toneClasses[tone]}`} />
+    <div className="flex items-center gap-2 rounded-soft border border-border bg-canvas px-2.5 py-2">
+      <span className={`h-1.5 w-1.5 rounded-full ${toneClasses[tone]}`} />
+      <Icon className={`h-3.5 w-3.5 ${toneClasses[tone].split(' ')[0]}`} />
       <span className="text-meta-sm font-medium text-text-primary">{label}</span>
     </div>
   );

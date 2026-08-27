@@ -1,11 +1,15 @@
 import type { Config } from 'tailwindcss';
 
 /**
- * VitalFlow design tokens — match the spec in docs/DESIGN_SYSTEM.md and the
- * MINIMAX prompt section 4 (Brand Colors).
+ * VitalFlow design tokens — derived from the brand mark.
  *
- * Keep the band colors stable — they are referenced by the band labels
- * returned from the analysis engine (Critical/Fragile/Watch/Healthy/Strong).
+ *   Brand gradient (sparingly):
+ *     #48D8C2 (turquoise) → #20BFE8 (cyan) → #1677E8 (royal blue)
+ *
+ *   The interface uses subtle depth: soft shadows, layered cards,
+ *   thin borders, restrained gradients. No neon, no glassmorphism
+ *   overload, no excessive glow. The mark itself is glossy, but
+ *   the dashboard translates that into refined 2D/2.5D surfaces.
  */
 const config: Config = {
   darkMode: ['class'],
@@ -17,52 +21,59 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Primary brand palette
+        // Brand palette — derived from the logo
         brand: {
-          // Primary blue — major actions, primary UI elements
-          DEFAULT: '#155EEF',
-          bright: '#2F80ED',
-          // Teal / mint — secondary highlights
-          teal: '#16B8A6',
-          mint: '#35D0BA',
-          // Dark navy — strong headings
-          navy: '#0B1F3A',
+          // Royal / electric blue — primary CTAs, primary UI elements
+          DEFAULT: '#1677E8',
+          // Deep blue — section accents, navy heading
+          deep: '#0757D5',
+          // Cyan — secondary highlights
+          cyan: '#20BFE8',
+          // Turquoise — accent gradient stops, focus rings
+          turquoise: '#48D8C2',
+          // Mint — soft success accents
+          mint: '#8BE5C4',
+          // Dark navy — strongest headings
+          navy: '#0B1B33',
+          // Secondary dark — subdued headings
+          'navy-2': '#152842',
         },
         // Backgrounds
-        canvas: '#F8FAFC',
+        canvas: '#F7F9FC',
         card: '#FFFFFF',
-        border: '#E5EAF0',
+        border: '#E6ECF3',
         // Text
         text: {
-          primary: '#172033',
-          secondary: '#64748B',
+          primary: '#0B1B33',
+          secondary: '#607086',
+          muted: '#8A98AA',
         },
         // Semantic
         positive: {
-          DEFAULT: '#16B8A6',
-          muted: '#E6F7F5',
+          DEFAULT: '#18A875',
+          muted: '#E6F7F0',
         },
         warning: {
-          DEFAULT: '#F59E0B',
-          muted: '#FEF3C7',
+          DEFAULT: '#F4A62A',
+          muted: '#FEF4E5',
         },
         negative: {
-          DEFAULT: '#DC2626',
-          muted: '#FEE2E2',
+          DEFAULT: '#E85C5C',
+          muted: '#FCEDED',
         },
-        // Health bands — match the backend enum
+        // Health bands — match the backend enum (Critical/Fragile/Watch/Healthy/Strong)
         band: {
-          strong: '#16B8A6',
-          healthy: '#22C55E',
-          watch: '#F59E0B',
-          fragile: '#EA580C',
-          critical: '#DC2626',
+          strong: '#18A875',
+          healthy: '#48D8C2',
+          watch: '#F4A62A',
+          fragile: '#F07A3F',
+          critical: '#E85C5C',
         },
         // Eligibility states for funding
         eligibility: {
-          eligible: '#16B8A6',
-          almost: '#F59E0B',
-          blocked: '#94A3B8',
+          eligible: '#18A875',
+          almost: '#F4A62A',
+          blocked: '#8A98AA',
         },
       },
       fontFamily: {
@@ -74,83 +85,44 @@ const config: Config = {
         'h2': ['24px', { lineHeight: '32px', fontWeight: '650' }],
         'h3': ['20px', { lineHeight: '28px', fontWeight: '600' }],
         'h4': ['18px', { lineHeight: '24px', fontWeight: '600' }],
-        'h5': ['16px', { lineHeight: '22px', fontWeight: '600' }],
+        'h5': ['15px', { lineHeight: '22px', fontWeight: '600' }],
         'body': ['15px', { lineHeight: '22px', fontWeight: '400' }],
         'body-sm': ['14px', { lineHeight: '20px', fontWeight: '400' }],
         'meta': ['13px', { lineHeight: '18px', fontWeight: '400' }],
         'meta-sm': ['12px', { lineHeight: '16px', fontWeight: '500' }],
         'number': ['36px', { lineHeight: '44px', fontWeight: '700' }],
         'number-lg': ['48px', { lineHeight: '56px', fontWeight: '700' }],
+        'score': ['56px', { lineHeight: '64px', fontWeight: '700' }],
       },
       fontVariantNumeric: {
         tabular: 'tabular-nums',
       },
       borderRadius: {
-        card: '14px',
+        card: '16px',
+        soft: '10px',
+        pill: '999px',
       },
       boxShadow: {
-        card: '0 1px 2px 0 rgba(15, 23, 42, 0.04), 0 1px 1px 0 rgba(15, 23, 42, 0.02)',
-        'card-hover': '0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04)',
-        'glow-teal': '0 0 0 1px rgba(22, 184, 166, 0.18), 0 8px 32px -8px rgba(22, 184, 166, 0.35)',
-        'glow-brand': '0 0 0 1px rgba(21, 94, 239, 0.18), 0 8px 32px -8px rgba(21, 94, 239, 0.35)',
-        'glow-mint': '0 0 0 1px rgba(53, 208, 186, 0.22), 0 12px 40px -8px rgba(53, 208, 186, 0.4)',
-        'inner-glow': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.4)',
+        // Very subtle — depth without weight
+        card: '0 1px 2px 0 rgba(11, 27, 51, 0.04)',
+        'card-hover': '0 4px 16px -4px rgba(11, 27, 51, 0.08), 0 2px 4px -2px rgba(11, 27, 51, 0.04)',
+        'pop': '0 8px 24px -8px rgba(11, 27, 51, 0.10), 0 2px 6px -2px rgba(11, 27, 51, 0.05)',
+        'inset-soft': 'inset 0 1px 2px 0 rgba(11, 27, 51, 0.04)',
+        'focus-brand': '0 0 0 3px rgba(22, 119, 232, 0.15)',
       },
       keyframes: {
         'fade-in': {
           from: { opacity: '0', transform: 'translateY(4px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
         },
-        'pulse-soft': {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.6' },
-        },
-        'score-fill': {
-          from: { strokeDashoffset: '283' },
-          to: { strokeDashoffset: 'var(--target-offset)' },
-        },
-        'pulse-ring': {
-          '0%': { transform: 'scale(0.95)', opacity: '0.7' },
-          '70%': { transform: 'scale(1.6)', opacity: '0' },
-          '100%': { transform: 'scale(1.6)', opacity: '0' },
-        },
-        'pulse-dot': {
-          '0%, 100%': { transform: 'scale(1)', opacity: '1' },
-          '50%': { transform: 'scale(1.4)', opacity: '0.55' },
-        },
-        'spin-slow': {
-          to: { transform: 'rotate(360deg)' },
-        },
-        'float-slow': {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-6px)' },
-        },
-        'ambient-1': {
-          '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
-          '33%': { transform: 'translate(30px, -20px) scale(1.05)' },
-          '66%': { transform: 'translate(-20px, 20px) scale(0.95)' },
-        },
-        'ambient-2': {
-          '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
-          '33%': { transform: 'translate(-25px, 15px) scale(0.95)' },
-          '66%': { transform: 'translate(20px, -25px) scale(1.05)' },
-        },
-        'glow-breathe': {
-          '0%, 100%': { opacity: '0.55' },
-          '50%': { opacity: '0.9' },
+        'chart-draw': {
+          from: { strokeDashoffset: '1000' },
+          to: { strokeDashoffset: '0' },
         },
       },
       animation: {
-        'fade-in': 'fade-in 200ms ease-out',
-        'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
-        'score-fill': 'score-fill 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
-        'pulse-ring': 'pulse-ring 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite',
-        'pulse-dot': 'pulse-dot 1.6s ease-in-out infinite',
-        'spin-slow': 'spin-slow 12s linear infinite',
-        'float-slow': 'float-slow 5s ease-in-out infinite',
-        'ambient-1': 'ambient-1 18s ease-in-out infinite',
-        'ambient-2': 'ambient-2 22s ease-in-out infinite',
-        'glow-breathe': 'glow-breathe 3.2s ease-in-out infinite',
+        'fade-in': 'fade-in 250ms ease-out',
+        'chart-draw': 'chart-draw 1.2s ease-out forwards',
       },
     },
   },

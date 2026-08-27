@@ -64,11 +64,11 @@ export function bandColor(band: string | null | undefined): {
   ring: string;
 } {
   const b = (band ?? '').toLowerCase();
-  if (b === 'strong') return { text: 'text-band-strong', bg: 'bg-band-strong/10', ring: 'ring-band-strong/20' };
-  if (b === 'healthy') return { text: 'text-band-healthy', bg: 'bg-band-healthy/10', ring: 'ring-band-healthy/20' };
-  if (b === 'watch') return { text: 'text-band-watch', bg: 'bg-band-watch/10', ring: 'ring-band-watch/20' };
+  if (b === 'strong') return { text: 'text-positive', bg: 'bg-positive-muted', ring: 'ring-positive/20' };
+  if (b === 'healthy') return { text: 'text-band-healthy', bg: 'bg-band-healthy/10', ring: 'ring-brand-turquoise/20' };
+  if (b === 'watch') return { text: 'text-warning', bg: 'bg-warning-muted', ring: 'ring-warning/20' };
   if (b === 'fragile') return { text: 'text-band-fragile', bg: 'bg-band-fragile/10', ring: 'ring-band-fragile/20' };
-  if (b === 'critical') return { text: 'text-band-critical', bg: 'bg-band-critical/10', ring: 'ring-band-critical/20' };
+  if (b === 'critical') return { text: 'text-negative', bg: 'bg-negative-muted', ring: 'ring-negative/20' };
   return { text: 'text-text-secondary', bg: 'bg-canvas', ring: 'ring-border' };
 }
 
@@ -81,9 +81,9 @@ export function outreachStatusColor(status: string | null | undefined): {
 } {
   switch (status) {
     case 'drafted': return { text: 'text-text-secondary', bg: 'bg-canvas' };
-    case 'approved': return { text: 'text-brand-bright', bg: 'bg-brand-bright/10' };
-    case 'shared': return { text: 'text-brand', bg: 'bg-brand/10' };
-    case 'viewed': return { text: 'text-eligibility-almost', bg: 'bg-warning-muted' };
+    case 'approved': return { text: 'text-brand', bg: 'bg-brand/10' };
+    case 'shared': return { text: 'text-brand-deep', bg: 'bg-brand-deep/10' };
+    case 'viewed': return { text: 'text-warning', bg: 'bg-warning-muted' };
     case 'completed': return { text: 'text-positive', bg: 'bg-positive-muted' };
     case 'revoked': return { text: 'text-negative', bg: 'bg-negative-muted' };
     case 'failed': return { text: 'text-negative', bg: 'bg-negative-muted' };
@@ -105,11 +105,11 @@ export function eligibilityColor(status: string | null | undefined): {
     case 'almost':
     case 'gap_small':
     case 'gap_medium':
-      return { text: 'text-eligibility-almost', bg: 'bg-warning-muted', ring: 'ring-warning/20' };
+      return { text: 'text-warning', bg: 'bg-warning-muted', ring: 'ring-warning/20' };
     case 'gap_large':
-      return { text: 'text-eligibility-almost', bg: 'bg-warning-muted', ring: 'ring-warning/20' };
+      return { text: 'text-warning', bg: 'bg-warning-muted', ring: 'ring-warning/20' };
     case 'blocked':
-      return { text: 'text-text-secondary', bg: 'bg-canvas', ring: 'ring-border' };
+      return { text: 'text-text-muted', bg: 'bg-canvas', ring: 'ring-border' };
     default:
       return { text: 'text-text-secondary', bg: 'bg-canvas', ring: 'ring-border' };
   }

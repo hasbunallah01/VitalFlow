@@ -4,25 +4,28 @@
 
 /* -----------------------------------------------------------------------
  * VitalFlow — Global styles
- * Light, calm, premium. The brand does the work; the surface is a canvas.
+ * Refined, calm, premium. The brand mark is glossy, but the
+ * surface is 2D with subtle depth. No neon, no heavy glow.
  * -------------------------------------------------------------------- */
 
-/* Inter via @import so the build doesn't need to fetch the font at
- * build time. The browser fetches the woff2 at runtime. If offline,
- * the font falls back to the system stack in tailwind.config.ts. */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;650;700&display=swap');
 
 :root {
-  --background: #F8FAFC;
-  --foreground: #172033;
+  --background: #F7F9FC;
+  --foreground: #0B1B33;
   --card: #FFFFFF;
-  --border: #E5EAF0;
-  --brand: #155EEF;
-  --brand-bright: #2F80ED;
-  --teal: #16B8A6;
-  --mint: #35D0BA;
-  --navy: #0B1F3A;
-  --secondary-text: #64748B;
+  --border: #E6ECF3;
+  --brand: #1677E8;
+  --brand-deep: #0757D5;
+  --cyan: #20BFE8;
+  --turquoise: #48D8C2;
+  --mint: #8BE5C4;
+  --navy: #0B1B33;
+  --secondary-text: #607086;
+  --muted-text: #8A98AA;
+  --positive: #18A875;
+  --warning: #F4A62A;
+  --negative: #E85C5C;
 }
 
 * {
@@ -39,13 +42,11 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Tabular numbers for financial figures */
 .tabular-nums,
 .financial {
   font-variant-numeric: tabular-nums;
 }
 
-/* Scrollbar — calm, not loud */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -54,56 +55,59 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #E2E8F0;
+  background: #E6ECF3;
   border-radius: 8px;
   border: 2px solid var(--background);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #CBD5E1;
+  background: #D1DAE5;
 }
 
-/* Focus rings — visible but quiet */
 :focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
-/* Selection */
 ::selection {
-  background: rgba(21, 94, 239, 0.15);
+  background: rgba(22, 119, 232, 0.15);
   color: var(--navy);
 }
 
-/* Skeleton shimmer */
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 .skeleton {
   background: linear-gradient(
     90deg,
     #F1F5F9 0%,
-    #E2E8F0 50%,
+    #E6ECF3 50%,
     #F1F5F9 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.4s linear infinite;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
-/* Recharts — calmer defaults */
 .recharts-cartesian-axis-tick text {
-  fill: var(--secondary-text);
+  fill: var(--muted-text);
   font-size: 12px;
 }
 .recharts-cartesian-grid line {
-  stroke: #F1F5F9;
+  stroke: #EEF2F7;
 }
 .recharts-tooltip-wrapper {
   outline: none !important;
+}
+
+.bg-brand-gradient {
+  background: linear-gradient(135deg, #48D8C2 0%, #20BFE8 50%, #1677E8 100%);
+}
+.text-brand-gradient {
+  background: linear-gradient(135deg, #48D8C2 0%, #20BFE8 50%, #1677E8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
