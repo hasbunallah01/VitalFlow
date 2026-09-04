@@ -29,6 +29,7 @@ import { reconstructHealthAssessment } from './build-assessment';
 import { buildBusinessProfile, ProfileUnavailableError } from './build-profile';
 import { buildFundingReadiness, type FundingReadinessEntry } from './funding-readiness';
 import { createFundingOutreach, buildEvidencePack } from '../db/persist-funding';
+import { dispatchWatcherAlerts, type CreatedWatchEvent, type DispatchResult } from '../email/dispatch';
 import type { HealthAssessment } from '../../types/analysis';
 import type { AgentName, AgentRunSummary, OrchestratorResult, OrchestratorOptions } from './types';
 
@@ -106,6 +107,7 @@ export async function runAgentsForAnalysis(
   let watcher: OrchestratorResult['watcher'] = {
     ran: agents.includes('watcher'),
     eventsCreated: 0,
+    dispatch: null,
     run: emptyRun('watcher'),
   };
   let insight: OrchestratorResult['insight'] = {
@@ -124,7 +126,7 @@ export async function runAgentsForAnalysis(
 
   // 3a. Watcher (needs the previous analysis if any, for diff).
   if (agents.includes('watcher')) {
-    watcher = await runWatcher(db, llm, analysisId, organizationId, assessment, ctx);
+    watcher = await runWatcher(db, llm, analysisId, organizationId, assessment, ctx, options);
   }
 
   // 3b. Insight Generation (uses the same assessment).
@@ -162,6 +164,7 @@ async function runWatcher(
   organizationId: string,
   assessment: HealthAssessment,
   ctx: AgentContext,
+  options: OrchestratorOptions = {},
 ): Promise<OrchestratorResult['watcher']> {
   // Load the previous analysis for diffing. The Watcher only fires
   // events on change; without a previous, the first run produces no
@@ -217,10 +220,11 @@ async function runWatcher(
     promptId: result.meta.promptId ?? null,
   });
   let eventsCreated = 0;
+  const createdEvents: CreatedWatchEvent[] = [];
   if (result.data && result.data.events.length > 0) {
     for (const ev of result.data.events) {
       try {
-        await db.watchEvent.create({
+        const row = await db.watchEvent.create({
           data: {
             organizationId,
             analysisId,
@@ -228,6 +232,17 @@ async function runWatcher(
             summary: ev.summary,
             evidence: ev.evidence as object,
           },
+        });
+        createdEvents.push({
+          id: row.id,
+          organizationId: row.organizationId,
+          analysisId: row.analysisId,
+          eventType: row.eventType,
+          summary: row.summary,
+          evidence: row.evidence,
+          createdAt: row.createdAt,
+          notifiedAt: row.notifiedAt,
+          notificationChannel: row.notificationChannel,
         });
         eventsCreated += 1;
       } catch {
@@ -238,9 +253,45 @@ async function runWatcher(
     }
   }
 
+  // Dispatch watcher alert emails. Zero events → zero emails. On
+  // Resend success we set notifiedAt on all events in the run; on
+  // failure we leave notifiedAt null and record the outcome in the
+  // AgentRun output (see below) so the audit trail stays honest.
+  let dispatch: DispatchResult | null = null;
+  if (createdEvents.length > 0) {
+    // Look up the org's display name for the email greeting. Fall back
+    // to a generic label — the email is still useful even without it.
+    const org = await db.organization
+      .findUnique({ where: { id: organizationId }, select: { name: true } })
+      .catch(() => null);
+    const businessName = org?.name?.trim() || 'Your business';
+    try {
+      dispatch = await dispatchWatcherAlerts({
+        db,
+        businessName,
+        events: createdEvents,
+        analysis: {
+          id: analysisId,
+          score: assessment.score,
+          band: assessment.band,
+          currency: assessment.currency,
+          monthsAnalyzed: assessment.monthsAnalyzed,
+          periodStart: assessment.periodStart ?? null,
+          periodEnd: assessment.periodEnd ?? null,
+        },
+        ...(options.dispatchDashboardUrl ? { dashboardUrlOverride: options.dispatchDashboardUrl } : {}),
+      });
+    } catch (e) {
+      // Email dispatch must never break the upload. Capture and continue.
+      // The next run of the orchestrator will retry the dispatch.
+      console.error('[orchestrator] dispatchWatcherAlerts threw:', e);
+    }
+  }
+
   return {
     ran: true,
     eventsCreated,
+    dispatch,
     run: {
       agent: 'watcher',
       agentVersion: WATCHER_VERSION,

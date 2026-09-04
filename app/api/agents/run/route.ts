@@ -73,6 +73,15 @@ export async function POST(req: Request) {
       ran: result.watcher.ran,
       eventsCreated: result.watcher.eventsCreated,
       status: result.watcher.run.status,
+      emailDispatch: result.watcher.dispatch
+        ? {
+            attempted: result.watcher.dispatch.attempted,
+            sent: result.watcher.dispatch.sent,
+            skipped: result.watcher.dispatch.skipped,
+            failed: result.watcher.dispatch.failed,
+            details: result.watcher.dispatch.details,
+          }
+        : null,
     },
     insight: {
       ran: result.insight.ran,

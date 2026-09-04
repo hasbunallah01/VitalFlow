@@ -100,6 +100,15 @@ export async function POST(req: Request) {
             durationMs: orchestratorResult.watcher.run.durationMs,
             tokensIn: orchestratorResult.watcher.run.tokensIn,
             tokensOut: orchestratorResult.watcher.run.tokensOut,
+            emailDispatch: orchestratorResult.watcher.dispatch
+              ? {
+                  attempted: orchestratorResult.watcher.dispatch.attempted,
+                  sent: orchestratorResult.watcher.dispatch.sent,
+                  skipped: orchestratorResult.watcher.dispatch.skipped,
+                  failed: orchestratorResult.watcher.dispatch.failed,
+                  details: orchestratorResult.watcher.dispatch.details,
+                }
+              : null,
           },
           insight: {
             ran: orchestratorResult.insight.ran,

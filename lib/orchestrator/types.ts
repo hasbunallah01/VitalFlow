@@ -35,6 +35,15 @@ export interface OrchestratorResult {
   watcher: {
     ran: boolean;
     eventsCreated: number;
+    /**
+     * Outcome of the Resend dispatch for this Watcher run. `null` when
+     * no events were created (no email to send). When present, the
+     * `details[].outcome` tells you per-event what happened:
+     *   - 'sent'    → Resend accepted, notifiedAt was set
+     *   - 'skipped' → no real recipient, or Resend not configured
+     *   - 'failed'  → Resend rejected, notifiedAt stays null
+     */
+    dispatch: import('../email/dispatch').DispatchResult | null;
     run: AgentRunSummary;
   };
   insight: {
@@ -71,6 +80,11 @@ export interface OrchestratorOptions {
    * Override the Prisma client (for tests with isolated transactions).
    */
   db?: import('@prisma/client').PrismaClient;
+  /**
+   * Override the dashboard URL that gets baked into Watcher alert emails.
+   * Useful for tests. Falls back to NEXT_PUBLIC_APP_URL.
+   */
+  dispatchDashboardUrl?: string;
 }
 
 export interface ReconstructedAnalysis {
